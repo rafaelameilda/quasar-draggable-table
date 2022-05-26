@@ -3,17 +3,24 @@
     <q-card-section>
       <q-grid
         :data="data"
-        :columns="grid"
+        :columns="columns"
         :columns_filter="true"
-        :draggable_columns="true"
-        :fullscreen="true"
+        :draggable="true"
         :csv_download="true"
-        :global_search="true"
+        :draggable_columns="true"
+        file_name="sample"
         selection="multiple"
         :selected="selected"
         @selected-val="GetSelected($event)"
-        @dragged_column="DraggedColumn($event)"
       >
+        <!-- <template v-slot:header="props">
+          <q-tr :props="props">
+            <q-th auto-width />
+            <q-th v-for="col in props.cols" :key="col.name" :props="props">
+              {{ col.label }}
+            </q-th>
+          </q-tr>
+        </template> -->
       </q-grid>
     </q-card-section>
     <q-card-section>
@@ -25,15 +32,15 @@
 <script>
 import { defineComponent, ref, onBeforeMount } from "vue";
 import { useStore } from "vuex";
-import { uid } from "quasar";
 
-let columns = [
+const columns = [
   {
     name: "codprod",
     align: "left",
     label: "Codigo",
     field: "codprod",
     sortable: true,
+    filter_type: "select",
   },
   {
     name: "descricao",
@@ -117,7 +124,6 @@ let columns = [
     sortable: true,
   },
 ];
-
 export default defineComponent({
   name: "Grouping",
   setup() {
@@ -134,47 +140,25 @@ export default defineComponent({
         "example/GETDADOS",
         "vai se lascar q deu certo"
       );
-      const xx = content.map((item) => {
-        item.name = uid();
-        return item;
-      });
-
-      data.value = xx;
+      const newDada = [...content];
+      data.value = newDada;
       store.commit("example/SET_DATA", content);
     };
 
-    const getGrids = () => {
-      const gridSaved = localStorage.getItem("@@grid");
-
-      if (!gridSaved) {
-        console.log("In Set");
-        localStorage.setItem("@@grid", JSON.stringify(columns.value));
-        return columns;
-      } else {
-        columns = JSON.parse(gridSaved);
-      }
-
-      return columns;
-    };
-
-    // function changePosition(arr, from, to) {
-    //   arr.splice(to, 0, arr.splice(from, 1)[0]);
-    //   return arr;
-    // }
-
-    const DraggedColumn = (data) => {
-      localStorage.setItem("@@grid", JSON.stringify(columns));
+    const onRequest = async (props) => {
+      pagination = { ...props };
+      await getTickets();
     };
 
     return {
-      grid: getGrids(),
+      columns,
       data,
       selected,
       GetSelected(Selected) {
         console.log(Selected);
       },
       getTickets,
-      DraggedColumn,
+      onRequest,
     };
   },
 });

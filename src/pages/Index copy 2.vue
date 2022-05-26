@@ -3,18 +3,18 @@
     <q-card-section>
       <q-grid
         :data="data"
-        :columns="grid"
+        :columns="columns"
         :columns_filter="true"
-        :draggable_columns="true"
-        :fullscreen="true"
-        :csv_download="true"
-        :global_search="true"
+        :draggable="true"
         selection="multiple"
+        :csv_download="true"
+        file_name="sample"
+        :groupby_filter="true"
         :selected="selected"
         @selected-val="GetSelected($event)"
-        @dragged_column="DraggedColumn($event)"
-      >
-      </q-grid>
+        row-key="codprod"
+        v-model:pagination="initialPagination"
+      ></q-grid>
     </q-card-section>
     <q-card-section>
       <q-btn @click="getTickets"> TENTA PESQUISAR</q-btn>
@@ -25,9 +25,8 @@
 <script>
 import { defineComponent, ref, onBeforeMount } from "vue";
 import { useStore } from "vuex";
-import { uid } from "quasar";
 
-let columns = [
+const columns = [
   {
     name: "codprod",
     align: "left",
@@ -117,9 +116,7 @@ let columns = [
     sortable: true,
   },
 ];
-
-export default defineComponent({
-  name: "Grouping",
+export default {
   setup() {
     let selected = ref([]);
     const data = ref([]);
@@ -134,48 +131,44 @@ export default defineComponent({
         "example/GETDADOS",
         "vai se lascar q deu certo"
       );
-      const xx = content.map((item) => {
-        item.name = uid();
-        return item;
-      });
-
-      data.value = xx;
+      const newDada = [...content];
+      data.value = newDada;
       store.commit("example/SET_DATA", content);
     };
 
-    const getGrids = () => {
-      const gridSaved = localStorage.getItem("@@grid");
-
-      if (!gridSaved) {
-        console.log("In Set");
-        localStorage.setItem("@@grid", JSON.stringify(columns.value));
-        return columns;
-      } else {
-        columns = JSON.parse(gridSaved);
-      }
-
-      return columns;
+    const onRequest = async (props) => {
+      pagination = { ...props };
+      console.log(props);
+      await getTickets();
     };
 
-    // function changePosition(arr, from, to) {
-    //   arr.splice(to, 0, arr.splice(from, 1)[0]);
-    //   return arr;
-    // }
-
-    const DraggedColumn = (data) => {
-      localStorage.setItem("@@grid", JSON.stringify(columns));
-    };
+    // const pagination = ref({
+    //   page: 1,
+    //   rowsPerPage: 5,
+    //   rowsNumber: 1,
+    // });
 
     return {
-      grid: getGrids(),
+      columns,
       data,
       selected,
+      //  pagination,
       GetSelected(Selected) {
         console.log(Selected);
       },
       getTickets,
-      DraggedColumn,
+      onRequest,
+      DraggedColumn(data) {
+        console.log(data);
+      },
+      initialPagination: {
+        sortBy: "desc",
+        descending: false,
+        page: 1,
+        rowsPerPage: 3,
+        // rowsNumber: xx if getting data from a server
+      },
     };
   },
-});
+};
 </script>
